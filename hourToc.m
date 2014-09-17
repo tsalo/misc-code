@@ -9,18 +9,29 @@ function hourToc(tStart)
 
 tEnd = toc(tStart);
 
+hrs = floor(tEnd / 3600);
+mins = floor(rem(tEnd, 3600) / 60);
 secs = floor(rem(rem(tEnd, 3600), 60));
 
-if tEnd > 60
-    mins = floor(rem(tEnd, 3600) / 60);
+hrStr = 'hours';
+minStr = 'minutes';
+secStr = 'seconds';
+
+if hrs == 1
+    hrStr = 'hour';
+end
+if mins == 1
+    minStr = 'minute';
+end
+if secs == 1
+    secStr = 'second';
 end
 
-if tEnd > 3600
-    hrs = floor(tEnd / 3600);
-    fprintf('%d hours, %d minutes, and %d seconds\n', hrs, mins, secs);
-elseif tEnd > 60
-    fprintf('%d minutes and %d seconds\n', mins, secs);
+if hrs > 0
+    fprintf('%d %s, %d %s, and %d %s\n', hrs, hrStr, mins, minStr, secs, secStr);
+elseif mins > 0
+    fprintf('%d %s and %d %s\n', mins, minStr, secs, secStr);
 else
-    fprintf('%d seconds\n', secs);
+    fprintf('%d %s\n', secs, secStr);
 end
 end
