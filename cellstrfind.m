@@ -12,7 +12,7 @@ function K = cellstrfind(string, patternCells, setting)
 % K (output):       0 if no match, 1 if match.
 K = 0;
 for iPattern = 1:length(patternCells)
-    if strcmp(setting, 'exact')
+    if exist('setting', 'var') && strcmp(setting, 'exact')
         if strcmp(string, patternCells{iPattern})
             K = 1;
         end
