@@ -1,4 +1,5 @@
-function data = read_csv(file, varargin)
+function data = readCsv(file, varargin)
+% FORMAT data = readCsv(file, varargin)
 % B.R. Geib Winter 2012
 %
 % Reads excel files that have been stripped of commas. Discards the top row
@@ -148,6 +149,4 @@ for i = 1:length(array)
     num_array(i) = sum;
     clear sum N;
 end
-
 end
-    
