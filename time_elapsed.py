@@ -1,7 +1,13 @@
 # -*- coding: utf-8 -*-
 """
 Created on Mon Oct 20 23:01:20 2014
-
+A function to print time elapsed in a user-friendly string.
+Example usage:
+    from datetime import datetime
+    import time_elapsed
+    start_time = datetime.now()
+    # Code here
+    time_elapsed.main(start_time)
 @author: taylorsalo
 """
 from datetime import datetime
