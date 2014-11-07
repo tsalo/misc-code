@@ -1,16 +1,21 @@
 # -*- coding: utf-8 -*-
 """
 Code based on a Gist to search Pubmed.
-Dependencies: Bio
+Dependencies: Bio, csv, datetime
+Optional dependencies: time_elapsed
 """
 
 from Bio import Entrez
 from Bio import Medline
 import csv
 from datetime import datetime
-import time_elapsed as te
 
-startTime = datetime.now()
+try:
+    import time_elapsed as te
+    startTime = datetime.now()
+    te_found = True
+except ImportError:
+    te_found = False
 
 TERM = ('("Carter CS"[AUTH]) AND ("fMRI"[WORD] ' + 
         'OR "functional magnetic resonance imaging"[WORD] ' + 
@@ -50,4 +55,5 @@ for record in records:
         with open('C:\\Users\\tsalo\\Documents\\find-a-mentor\\Carter_Articles.csv', 'a') as fp:
             fp.write(out_string)
 
-te.main(startTime)
+if te_found:
+    te.main(startTime)
