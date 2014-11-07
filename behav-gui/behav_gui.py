@@ -37,7 +37,7 @@ class MainWindow(Tkinter.Tk):
         Tkinter.Tk.__init__(self)
         self.wm_title("GUI")
 
-        id_label = Tkinter.Label(self, text="Subject ID")
+        id_label = Tkinter.Label(self, text="Complete Subject ID")
         id_label.grid(row=1, column=1)
         self.sub_input = Tkinter.StringVar(self)
         id_entry = Tkinter.Entry(self, bd=5, textvariable=self.sub_input)
