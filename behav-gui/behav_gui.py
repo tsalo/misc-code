@@ -46,8 +46,8 @@ class MainWindow(Tkinter.Tk):
         tp_label = Tkinter.Label(self, text="Timepoint")
         tp_label.grid(row=2, column=1)
         self.tp_input = Tkinter.StringVar(self)
-        self.tp_input.set("1- 00 Month")
-        tp_option = Tkinter.OptionMenu(self, self.tp_input, "1- 00 Month",
+        self.tp_input.set("")
+        tp_option = Tkinter.OptionMenu(self, self.tp_input, "", "1- 00 Month",
                                        "3- 12 Month", "4- 24 Month")
         tp_option.grid(row=2, column=2)
 
@@ -66,14 +66,14 @@ class MainWindow(Tkinter.Tk):
                                      command=self.close_window)
         done_button.grid(row=5, column=1, columnspan=2)
 
-#        self.bind("<Return>", self.close_window)
-
-        self.mainloop()
-
     def close_window(self, *args):
         """ Closes the GUI window."""
         del args
-        self.destroy()
+        if self.tp_input.get() and self.sub_input.get():
+            self.destroy()
+        else:
+            error_message = MessageWindow("ERROR", "You need to enter a subject ID and choose a timepoint.")
+            error_message.mainloop()
 
 
 class OverwriteWindow(Tkinter.Tk):
@@ -204,8 +204,6 @@ class MessageWindow(Tkinter.Tk):
                                      command=self.close_window)
         okay_button.grid(row=2, column=3, columnspan=1)
 
-        self.mainloop()
-
     def close_window(self):
         """ Closes the GUI window."""
         self.destroy()
@@ -260,16 +258,18 @@ def get_curr_order(task_order_csv, task_order, curr_subj,
                             col_end[curr_subj.tp_dict.get(
                                     curr_subj.tp)]] = curr_order
         if curr_subj.all_tasks:
-            MessageWindow("Order", "The current order is: " +
-                          ", ".join(curr_order))
+            message = MessageWindow("Order", "The current order is: " +
+                                    ", ".join(curr_order))
+            message.mainloop()
         return curr_order, task_file, overwrite
     else:
         if overwrite == 0:
             if OverwriteWindow().response:
                 overwrite = 1
                 if curr_subj.all_tasks:
-                    MessageWindow("Order", "The current order is: " +
-                                  ", ".join(curr_order))
+                    message = MessageWindow("Order", "The current order is: " +
+                                            ", ".join(curr_order))
+                    message.mainloop()
                 return curr_order, task_file, overwrite
             else:
                 sys.exit()
@@ -341,6 +341,7 @@ def run_script():
     task_order_csv = par_dir + "\\task_order.csv"
     overwrite = 0
     input_window = MainWindow()
+    input_window.mainloop()
 
     with open(par_dir + "\\task_order.pickle") as file_:
         [task_order, tp_dict, col_beg, col_end] = pickle.load(file_)
@@ -396,8 +397,9 @@ def run_script():
 
         run_file[a] = search_dict(file_dict, task, ind_ord[a][0])
 
-    MessageWindow("Order", "The current order is: " +
-                  ", ".join("\t".join(map(str,l)) for l in ind_ord))
+    message = MessageWindow("Order", "The current order is: " +
+                            ", ".join("\t".join(map(str,l)) for l in ind_ord))
+    message.mainloop()
 
     # Loop through tasks and execute files in order. Ask to continue after each
     # task finishes.
@@ -426,9 +428,10 @@ def run_script():
             if response == "Quit":
                 sys.exit()
 
-    MessageWindow("Congrats!",
-                  "You're done. Your random number is " +
-                  str(random.randint(1, 63)))
+    message = MessageWindow("Congrats!",
+                            "You're done. Your random number is " +
+                            str(random.randint(1, 63)))
+    message.mainloop()
 
 
 if __name__ == "__main__":
