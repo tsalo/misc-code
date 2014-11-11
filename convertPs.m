@@ -21,8 +21,7 @@ elseif strcmp(out_type, 'pdf')
     device = 'pdfwrite';
 end
 
-disp(['gs -dBATCH -dNOPAUSE -sDEVICE=' device ' -sOutputFile=' filename_short '.' out_type ' -r100 ' filename]);
-system(['gs -dBATCH -dNOPAUSE -sDEVICE=' device ' -sOutputFile=' filename_short '.' out_type ' -r100 ' filename]);
+system(['gs -dBATCH -dNOPAUSE -sDEVICE=' device ' -sOutputFile=' filename_short '.' out_type ' -r100 ' filename])
 fprintf('Converted %s to %s.%s\n', filename, filename_short, out_type);
 
 end
