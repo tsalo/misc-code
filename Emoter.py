@@ -14,19 +14,25 @@ class Emoter:
     def __init__(self, name):
         self.name = name
         self.status = "alive"
-        self.thresholds = {}
-        self.level = {}
-        self.count = {}
-        self.thresholds["dopamine"] = [0, 25, 75, 100]
-        self.thresholds["noradrenaline"] = [0, 25, 75, 100]
-        self.thresholds["serotonin"] = [0, 25, 75, 100]
-        self.level["dopamine"] = "normal"
-        self.level["noradrenaline"] = "normal"
-        self.level["serotonin"] = "normal"
-        self.count["dopamine"] = 1
-        self.count["noradrenaline"] = 1
-        self.count["serotonin"] = 1
+        self.nts = {"dopamine": {"thresholds": [0, 25, 75, 100],
+                                 "level": "normal",
+                                 "count": 1},
+                    "noradrenaline": {"thresholds": [0, 25, 75, 100],
+                                      "level": "normal",
+                                      "count": 1},
+                    "serotonin": {"thresholds": [0, 25, 75, 100],
+                                  "level": "normal",
+                                  "count": 1}}
         self.emotion = "NEUTRAL"
+
+
+    def __print_statement(self, neurotransmitter, statement):
+        """
+        Prints a long line filled with info.
+        """
+        line = "{}'s {} levels have been {} lately, resulting in {}."
+        info = [self.name, neurotransmitter, self.nts[neurotransmitter]["level"], statement]
+        print(line.format(*info))
 
     def __adjust_thresholds(self, neurotransmitter):
         """
@@ -34,40 +40,42 @@ class Emoter:
         A very rudimentary function meant to reflect the effects of LTP and LTD.
         Sort of.
         """
-        if self.count[neurotransmitter] > 3:
-            if self.level[neurotransmitter] is "low":
-                print(self.name + "'s " + neurotransmitter + " levels have " +
-                      "been " + self.level[neurotransmitter] + " lately, " +
-                      "resulting in decreased sensitivity.")
-                self.thresholds[neurotransmitter][1] = self.thresholds[neurotransmitter][1] + 1
-                if self.thresholds[neurotransmitter][1] >= self.thresholds[neurotransmitter][2] - 1:
-                    self.thresholds[neurotransmitter][2] = self.thresholds[neurotransmitter][2] + 1
-            elif self.level[neurotransmitter] is "high":
-                print(self.name + "'s " + neurotransmitter + " levels have " +
-                      "been " + self.level[neurotransmitter] + " lately, " +
-                      "resulting in increased sensitivity.")
-                self.thresholds[neurotransmitter][2] = self.thresholds[neurotransmitter][2] - 1
-                if self.thresholds[neurotransmitter][2] <= self.thresholds[neurotransmitter][1] - 1:
-                    self.thresholds[neurotransmitter][1] = self.thresholds[neurotransmitter][1] - 1
-        if self.count[neurotransmitter] > 5:
-            if (self.level[neurotransmitter] is "normal" and
-                self.thresholds[neurotransmitter][2] < self.thresholds[neurotransmitter][3] - 1 and
-                self.thresholds[neurotransmitter][1] > self.thresholds[neurotransmitter][0] + 1):
-                print(self.name + "'s " + neurotransmitter + " levels have " +
-                      "been " + self.level[neurotransmitter] + " lately, " +
-                      "resulting in increased resilience.")
-                self.thresholds[neurotransmitter][2] = self.thresholds[neurotransmitter][2] + 1
-                self.thresholds[neurotransmitter][1] = self.thresholds[neurotransmitter][1] - 1
+        min_threshold = self.nts[neurotransmitter]["thresholds"][0]
+        low_threshold = self.nts[neurotransmitter]["thresholds"][1]
+        high_threshold = self.nts[neurotransmitter]["thresholds"][2]
+        max_threshold = self.nts[neurotransmitter]["thresholds"][3]
+
+        if self.nts[neurotransmitter]["count"] > 3:
+            if self.nts[neurotransmitter]["level"] == "low":
+                self.__print_statement(neurotransmitter, "decreased sensitivity")
+                low_threshold = low_threshold + 1
+                if low_threshold >= high_threshold - 1:
+                    high_threshold = high_threshold + 1
+            elif self.nts[neurotransmitter]["level"] == "high":
+                self.__print_statement(neurotransmitter, "increased sensitivity")
+                high_threshold = high_threshold - 1
+                if high_threshold <= low_threshold + 1:
+                    low_threshold = low_threshold - 1
+        if self.nts[neurotransmitter]["count"] > 5:
+            if (self.nts[neurotransmitter]["level"] == "normal" and
+                high_threshold < max_threshold - 1 and
+                low_threshold > min_threshold + 1):
+                self.__print_statement(neurotransmitter, "increased resilience")
+                high_threshold = high_threshold + 1
+                low_threshold = low_threshold - 1
+        
+        self.nts[neurotransmitter]["thresholds"][1] = low_threshold
+        self.nts[neurotransmitter]["thresholds"][2] = high_threshold
 
     def __add_count(self, neurotransmitter, level):
         """
         Counts the number of times a subject has been recorded at a given
         neurotransmitter level.
         """
-        if self.level[neurotransmitter] is level:
-            self.count[neurotransmitter] = self.count[neurotransmitter] + 1
+        if self.nts[neurotransmitter]["level"] == level:
+            self.nts[neurotransmitter]["count"] = self.nts[neurotransmitter]["count"] + 1
         else:
-            self.count[neurotransmitter] = 1
+            self.nts[neurotransmitter]["count"] = 1
 
     def __adjust_levels(self, neurotransmitter, level):
         """
@@ -75,24 +83,26 @@ class Emoter:
         Also counts the number of times the subject has recorded being at that
         level and what, if any, changes should be made to their thresholds.
         """
-        if self.status is "alive":
-            if level in range(self.thresholds[neurotransmitter][0],
-                              self.thresholds[neurotransmitter][1]):
+        min_threshold = self.nts[neurotransmitter]["thresholds"][0]
+        low_threshold = self.nts[neurotransmitter]["thresholds"][1]
+        high_threshold = self.nts[neurotransmitter]["thresholds"][2]
+        max_threshold = self.nts[neurotransmitter]["thresholds"][3]
+        
+        if self.status == "alive":
+            if level in range(min_threshold, low_threshold):
                 self.__add_count(neurotransmitter, "low")
-                self.level[neurotransmitter] = "low"
+                self.nts[neurotransmitter]["level"] = "low"
                 self.__adjust_thresholds(neurotransmitter)
-            elif level in range(self.thresholds[neurotransmitter][1],
-                                self.thresholds[neurotransmitter][2]):
+            elif level in range(low_threshold, high_threshold):
                 self.__add_count(neurotransmitter, "normal")
-                self.level[neurotransmitter] = "normal"
+                self.nts[neurotransmitter]["level"] = "normal"
                 self.__adjust_thresholds(neurotransmitter)
-            elif level in range(self.thresholds[neurotransmitter][2],
-                                self.thresholds[neurotransmitter][3]):
+            elif level in range(high_threshold, max_threshold):
                 self.__add_count(neurotransmitter, "high")
-                self.level[neurotransmitter] = "high"
+                self.nts[neurotransmitter]["level"] = "high"
                 self.__adjust_thresholds(neurotransmitter)
             else:
-                print("BOOM! " + self.name + " is dead!")
+                print("BOOM! {} is dead!".format(self.name))
                 self.status = "dead"
 
     def set_levels(self, dopamine, noradrenaline, serotonin):
@@ -111,42 +121,30 @@ class Emoter:
         This needs emotions for when one or more neurotransmitters are within
         normal ranges.
         """
-        if (self.level["dopamine"] is "high" and
-            self.level["noradrenaline"] is "high" and
-            self.level["serotonin"] is "high"):
+        levels_list = [self.nts["dopamine"]["level"],
+                       self.nts["noradrenaline"]["level"],
+                       self.nts["serotonin"]["level"]]
+        if levels_list == ["high", "high", "high"]:
             self.emotion = "INTEREST/EXCITEMENT"
-        elif (self.level["dopamine"] is "high" and
-              self.level["noradrenaline"] is "high" and
-              self.level["serotonin"] is "low"):
+        elif levels_list == ["high", "high", "low"]:
             self.emotion = "ANGER/RAGE"
-        elif (self.level["dopamine"] is "high" and
-              self.level["noradrenaline"] is "low" and
-              self.level["serotonin"] is "high"):
+        elif levels_list == ["high", "low", "high"]:
             self.emotion = "ENJOYMENT/JOY"
-        elif (self.level["dopamine"] is "low" and
-              self.level["noradrenaline"] is "high" and
-              self.level["serotonin"] is "high"):
+        elif levels_list == ["low", "high", "high"]:
             self.emotion = "SURPRISE"
-        elif (self.level["dopamine"] is "high" and
-              self.level["noradrenaline"] is "low" and
-              self.level["serotonin"] is "low"):
+        elif levels_list == ["high", "low", "low"]:
             self.emotion = "FEAR/TERROR"
-        elif (self.level["dopamine"] is "low" and
-              self.level["noradrenaline"] is "high" and
-              self.level["serotonin"] is "low"):
+        elif levels_list == ["low", "high", "low"]:
             self.emotion = "CONTEMPT/DISGUST"
-        elif (self.level["dopamine"] is "low" and
-              self.level["noradrenaline"] is "low" and
-              self.level["serotonin"] is "high"):
+        elif levels_list == ["low", "low", "high"]:
             self.emotion = "DISTRESS/ANGUISH"
-        elif (self.level["dopamine"] is "low" and
-              self.level["noradrenaline"] is "low" and
-              self.level["serotonin"] is "low"):
+        elif levels_list == ["low", "low", "low"]:
             self.emotion = "SHAME/HUMILIATION"
         else:
             self.emotion = "NEUTRAL"
 
 subject = Emoter("Subject 001")
+
 subject.set_levels(20, 80, 20)
 print(subject.emotion)
 subject.set_levels(20, 20, 20)
