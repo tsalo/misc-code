@@ -6,14 +6,6 @@ Emotion evaluation based on the Lovheim cube.
 """
 
 
-class Transmitter:
-    def __init__(self, name):
-        self.name = name
-        self.thresholds = [0, 25, 75, 100]
-        self.level = "normal"
-        self.count = 1
-
-
 class Emoter:
     """
     Serotonin seems to match affect (positive or negative).
