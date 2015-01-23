@@ -8,7 +8,7 @@ populates changes across all README.md files in folder and subfolders.
 
 import os
 
-infrastructure_file = "C:/Users/tsalo/Documents/TCANLab/fMRI-tools/INFRASTRUCTURE.md"
+infrastructure_file = "C:/Users/tsalo/Documents/TCANLab/MRI-tools/INFRASTRUCTURE.md"
 start_line = "<!-- Start infrastructure -->"
 end_line = "<!-- End infrastructure -->"
 
