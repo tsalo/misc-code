@@ -12,7 +12,7 @@ Caveat: INFRASTRUCTURE.md must be in the base folder of the repository.
 
 import os
 
-infrastructure_file = "C:/Users/tsalo/Documents/TCANLab/MRI-tools/INFRASTRUCTURE.md"
+infrastructure_file = "C:/Users/tsalo/Documents/TCANLab/task-tools/INFRASTRUCTURE.md"
 repository_name = os.path.basename(os.path.normpath(os.path.dirname(infrastructure_file)))
 
 start_line = "<!-- Start infrastructure -->"
