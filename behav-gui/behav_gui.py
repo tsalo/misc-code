@@ -13,6 +13,13 @@ dictionaries in several pickle files in the main folder. For readability
 and easy updating, the dictionaries and pickling procedures are also stored in
 a script ("behav_order.py").
 
+To test the GUI, you need a csv file for each task matching the files defined
+by task_info in behav_order.py, a csv file named task_order.csv, and files
+matching the contents of file_dict in behav_order.py. If the files you want to
+open are not E-Prime scripts (such as subtituting text files for an easy test),
+you need to alter the function execute_file to hold while your default text
+editor is open.
+
 Dependencies: Tkinter, csv, pickle, sys, psutil, os, subprocess, random, and
 inspect.
 @author: tsalo
@@ -26,88 +33,6 @@ import os
 import subprocess
 import random
 import inspect
-
-
-class MainWindow(Tkinter.Tk):
-    """
-    Main graphical user interface for behav_gui. Used to input subject ID,
-    timepoint, and handedness.
-    """
-    def __init__(self):
-        Tkinter.Tk.__init__(self)
-        self.wm_title("GUI")
-
-        id_label = Tkinter.Label(self, text="Complete Subject ID")
-        id_label.grid(row=1, column=1)
-        self.sub_input = Tkinter.StringVar(self)
-        id_entry = Tkinter.Entry(self, bd=5, textvariable=self.sub_input)
-        id_entry.grid(row=1, column=2)
-
-        tp_label = Tkinter.Label(self, text="Timepoint")
-        tp_label.grid(row=2, column=1)
-        self.tp_input = Tkinter.StringVar(self)
-        self.tp_input.set("")
-        tp_option = Tkinter.OptionMenu(self, self.tp_input, "", "1- 00 Month",
-                                       "3- 12 Month", "4- 24 Month")
-        tp_option.grid(row=2, column=2)
-
-        handed_label = Tkinter.Label(self, text="Handedness")
-        handed_label.grid(row=3, column=1)
-        self.handed = Tkinter.StringVar(self)
-        self.handed.set("Right")
-        handedness_option = Tkinter.OptionMenu(self, self.handed,
-                                               "Right", "Left")
-        handedness_option.grid(row=3, column=2)
-
-        empty_label = Tkinter.Label(self, text="")
-        empty_label.grid(row=4, column=2)
-
-        done_button = Tkinter.Button(self, text="Done",
-                                     command=self.close_window)
-        done_button.grid(row=5, column=1, columnspan=2)
-
-    def close_window(self, *args):
-        """ Closes the GUI window."""
-        del args
-        if self.tp_input.get() and self.sub_input.get():
-            self.destroy()
-        else:
-            error_message = MessageWindow("ERROR", "You need to enter a subject ID and choose a timepoint.")
-            error_message.mainloop()
-
-
-class OverwriteWindow(Tkinter.Tk):
-    """
-    Creates a window with query (Do you wish to overwrite) and two buttons, Yes
-    and No. Each sets response attribute to respective string.
-    """
-    def __init__(self):
-        Tkinter.Tk.__init__(self)
-        self.wm_title("Duplicate")
-        self.response = False
-
-        overwrite_label = Tkinter.Label(self,
-                                        text="Duplicate ID and TP given. " +
-                                             "Overwrite?")
-        overwrite_label.grid(row=1, column=1, columnspan=5)
-
-        yes_button = Tkinter.Button(self, text="Yes", command=self.respond_yes)
-        yes_button.grid(row=2, column=2, columnspan=1)
-
-        no_button = Tkinter.Button(self, text="No", command=self.respond_no)
-        no_button.grid(row=2, column=4, columnspan=1)
-
-        self.mainloop()
-
-    def respond_yes(self):
-        """ Closes the GUI window and sets response to Yes."""
-        self.response = True
-        self.destroy()
-
-    def respond_no(self):
-        """ Closes the GUI window and sets response to No."""
-        self.response = False
-        self.destroy()
 
 
 class ContinueWindow(Tkinter.Tk):
@@ -156,6 +81,109 @@ class ContinueWindow(Tkinter.Tk):
         self.destroy()
 
 
+class MainWindow(Tkinter.Tk):
+    """
+    Main graphical user interface for behav_gui. Used to input subject ID,
+    timepoint, and handedness.
+    """
+    def __init__(self):
+        Tkinter.Tk.__init__(self)
+        self.wm_title("GUI")
+
+        id_label = Tkinter.Label(self, text="Complete Subject ID")
+        id_label.grid(row=1, column=1)
+        self.sub_input = Tkinter.StringVar(self)
+        id_entry = Tkinter.Entry(self, bd=5, textvariable=self.sub_input)
+        id_entry.grid(row=1, column=2)
+
+        tp_label = Tkinter.Label(self, text="Timepoint")
+        tp_label.grid(row=2, column=1)
+        self.tp_input = Tkinter.StringVar(self)
+        self.tp_input.set("")
+        tp_option = Tkinter.OptionMenu(self, self.tp_input, "", "1- 00 Month",
+                                       "3- 12 Month", "4- 24 Month")
+        tp_option.grid(row=2, column=2)
+
+        handed_label = Tkinter.Label(self, text="Handedness")
+        handed_label.grid(row=3, column=1)
+        self.handed = Tkinter.StringVar(self)
+        self.handed.set("Right")
+        handedness_option = Tkinter.OptionMenu(self, self.handed,
+                                               "Right", "Left")
+        handedness_option.grid(row=3, column=2)
+
+        empty_label = Tkinter.Label(self, text="")
+        empty_label.grid(row=4, column=2)
+
+        done_button = Tkinter.Button(self, text="Done",
+                                     command=self.close_window)
+        done_button.grid(row=5, column=1, columnspan=2)
+
+    def close_window(self, *args):
+        """ Closes the GUI window."""
+        del args
+        if self.tp_input.get() and self.sub_input.get():
+            self.destroy()
+        else:
+            error_message = MessageWindow("ERROR", "You need to enter a " +
+                                          "subject ID and choose a timepoint.")
+            error_message.mainloop()
+
+
+class MessageWindow(Tkinter.Tk):
+    """
+    Creates a window with an inputted title and label and a close button
+    labeled "Okay".
+    """
+    def __init__(self, title, label):
+        Tkinter.Tk.__init__(self)
+        self.wm_title(title)
+        input_label = Tkinter.Label(self, text=label)
+        input_label.grid(row=1, column=1, columnspan=5)
+
+        okay_button = Tkinter.Button(self, text="Okay",
+                                     command=self.close_window)
+        okay_button.grid(row=2, column=3, columnspan=1)
+
+    def close_window(self):
+        """ Closes the GUI window."""
+        self.destroy()
+
+
+class OverwriteWindow(Tkinter.Tk):
+    """
+    Creates a window with query (Do you wish to overwrite) and two buttons, Yes
+    and No. Each sets response attribute to respective string.
+    """
+    def __init__(self):
+        Tkinter.Tk.__init__(self)
+        self.wm_title("Duplicate")
+        self.response = False
+
+        overwrite_label = Tkinter.Label(self,
+                                        text="Duplicate ID and TP given. " +
+                                             "Overwrite?")
+        overwrite_label.grid(row=1, column=1, columnspan=5)
+
+        yes_button = Tkinter.Button(self, text="Yes", command=self.respond_yes)
+        yes_button.grid(row=2, column=2, columnspan=1)
+
+        no_button = Tkinter.Button(self, text="No", command=self.respond_no)
+        no_button.grid(row=2, column=4, columnspan=1)
+
+        self.mainloop()
+
+    def respond_yes(self):
+        """ Closes the GUI window and sets response to Yes."""
+        self.response = True
+        self.destroy()
+
+    def respond_no(self):
+        """ Closes the GUI window and sets response to No."""
+        self.response = False
+        self.destroy()
+
+
 class RetryWindow(Tkinter.Tk):
     """
     Creates a window with one inputted label and two buttons- Restart and Quit.
@@ -189,26 +217,6 @@ class RetryWindow(Tkinter.Tk):
         self.destroy()
 
 
-class MessageWindow(Tkinter.Tk):
-    """
-    Creates a window with an inputted title and label and a close button
-    labeled "Okay".
-    """
-    def __init__(self, title, label):
-        Tkinter.Tk.__init__(self)
-        self.wm_title(title)
-        input_label = Tkinter.Label(self, text=label)
-        input_label.grid(row=1, column=1, columnspan=5)
-
-        okay_button = Tkinter.Button(self, text="Okay",
-                                     command=self.close_window)
-        okay_button.grid(row=2, column=3, columnspan=1)
-
-    def close_window(self):
-        """ Closes the GUI window."""
-        self.destroy()
-
-
 class Subject():
     def __init__(self, subject_id, timepoint, handedness, tp_dict, all_tasks):
         self.id = subject_id
@@ -216,6 +224,24 @@ class Subject():
         self.handed = handedness
         self.tp_dict = tp_dict
         self.all_tasks = all_tasks
+
+
+def execute_file(run_file):
+    """
+    Opens E-Run (or other specified) file and waits for E-Run to no longer be
+    in current processes before continuing.
+    For debugging on a Linux machine, it is set to open the files specified and
+    wait for gedit to close for the user tsalo.
+    """
+    if os.name == "nt":
+        subprocess.call(run_file, shell=True)
+    elif os.name == "posix":
+        subprocess.call(("xdg-open", run_file))
+        open_proc = True
+        while open_proc:
+            data = list(psutil.process_iter())
+            open_proc = any(["gedit" in safe_name(proc) and "tsalo" in
+                             safe_user(proc) for proc in data])
 
 
 def get_curr_order(task_order_csv, task_order, curr_subj,
@@ -226,7 +252,7 @@ def get_curr_order(task_order_csv, task_order, curr_subj,
     for given subject and timepoint, as well as updates list of lists (from
     csv).
     """
-    with open(task_order_csv, 'r') as file_:
+    with open(task_order_csv, "r") as file_:
         task_file = list(csv.reader(file_, delimiter=','))
 
     subjects = [row[0] for row in task_file]
@@ -277,61 +303,6 @@ def get_curr_order(task_order_csv, task_order, curr_subj,
             return curr_order, task_file, overwrite
 
 
-def search_dict(dictionary, *args):
-    """
-    Given an arbitrary number of keys, looks through nested dictionaries for
-    value. Last key can be a dummy.
-    """
-    for iKey, Key in enumerate(args):
-        if Key in dictionary.keys():
-            if type(dictionary.get(Key)) is dict:
-                dictionary = dictionary.get(Key)
-                if iKey == len(args) - 1:
-                    return dictionary
-            else:
-                return dictionary.get(Key)
-        else:
-            return dictionary
-
-
-def safe_name(process):
-    """
-    Check for names of processes in psutil.process_iter and, if
-    permission denied, returns "None".
-    """
-    try:
-        return process.name
-    except Exception:
-        return "None"
-
-
-def safe_user(process):
-    """
-    Check for names of users in psutil.process_iter and, if
-    permission denied, returns "None".
-    """
-    try:
-        return process.username
-    except Exception:
-        return "None"
-
-
-def execute_file(run_file):
-    """
-    Opens E-Run (or other specified) file and waits for E-Run to no longer be
-    in current processes before continuing.
-    """
-    if os.name == 'nt':
-        subprocess.call(run_file, shell=True)
-    elif os.name == 'posix':
-        subprocess.call(('xdg-open', run_file))
-        open_proc = True
-        while open_proc:
-            data = list(psutil.process_iter())
-            open_proc = any(["gedit" in safe_name(proc) and "tsalo" in
-                             safe_user(proc) for proc in data])
-
-
 def run_script():
     """
     Runs full script (opens GUI windows, updates csvs, and opens E-Run files).
@@ -365,7 +336,7 @@ def run_script():
                                                       col_beg,
                                                       col_end,
                                                       overwrite)
-    with open(task_order_csv, 'wb') as file_:
+    with open(task_order_csv, "wb") as file_:
         file_ = csv.writer(file_)
         for row in task_file:
             file_.writerow(row)
@@ -390,7 +361,7 @@ def run_script():
                                                             col_beg,
                                                             col_end,
                                                             overwrite)
-        with open(task_order_csv, 'wb') as file_:
+        with open(task_order_csv, "wb") as file_:
             file_ = csv.writer(file_)
             for row in ind_file[a]:
                 file_.writerow(row)
@@ -398,7 +369,7 @@ def run_script():
         run_file[a] = search_dict(file_dict, task, ind_ord[a][0])
 
     message = MessageWindow("Order", "The current order is: " +
-                            ", ".join("\t".join(map(str,l)) for l in ind_ord))
+                            ", ".join("\t".join(map(str, l)) for l in ind_ord))
     message.mainloop()
 
     # Loop through tasks and execute files in order. Ask to continue after each
@@ -412,7 +383,7 @@ def run_script():
             else:
                 execute_file(run_file[iTask])
 
-            # When run_file is closed, move on to next.
+            # When run_file is closed, move on to next file.
             if iTask < (len(curr_order) - 1):
                 response = ContinueWindow(curr_order[iTask] + " " + 
                                           str(ind_ord[iTask]) +
@@ -432,6 +403,45 @@ def run_script():
                             "You're done. Your random number is " +
                             str(random.randint(1, 63)))
     message.mainloop()
+
+
+def safe_name(process):
+    """
+    Check for names of processes in psutil.process_iter and, if
+    permission denied, returns "None".
+    """
+    try:
+        return process.name
+    except Exception:
+        return "None"
+
+
+def safe_user(process):
+    """
+    Check for names of users in psutil.process_iter and, if
+    permission denied, returns "None".
+    """
+    try:
+        return process.username
+    except Exception:
+        return "None"
+
+
+def search_dict(dictionary, *args):
+    """
+    Given an arbitrary number of keys, looks through nested dictionaries for
+    value. Last key can be a dummy.
+    """
+    for iKey, Key in enumerate(args):
+        if Key in dictionary.keys():
+            if type(dictionary.get(Key)) is dict:
+                dictionary = dictionary.get(Key)
+                if iKey == len(args) - 1:
+                    return dictionary
+            else:
+                return dictionary.get(Key)
+        else:
+            return dictionary
 
 
 if __name__ == "__main__":
