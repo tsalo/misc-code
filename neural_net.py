@@ -65,7 +65,8 @@ class Neuron:
 
     def create_psp(self, brain, connector):
         # Generate post-synaptic potential and slowly returning to baseline.
-        brain.neurons[connector].psp(brain.neurons[connector].potential_at_hillock + self.connections[connector], brain)
+        psp_val = brain.neurons[connector].potential_at_hillock + self.connections[connector]
+        brain.neurons[connector].psp(psp_val, brain)
         connection_sign = np.sign(self.connections[connector])
         for current_input in np.arange(0, np.abs(self.connections[connector]), 1):
             time.sleep(1)
@@ -115,6 +116,7 @@ for neuron in neurons_to_fire:
 time.sleep(1)
 
 #while taylor.neurons["Neuron 1"].potential_at_hillock != 0:
-#    print("Neuron 1 has potential_at_hillock of " + str(taylor.neurons["Neuron 1"].potential_at_hillock))
+#    print("Neuron 1 has potential_at_hillock of " +
+#          str(taylor.neurons["Neuron 1"].potential_at_hillock))
 #    time.sleep(1)
 print("Neuron 1 has potential_at_hillock of " + str(taylor.neurons["Neuron 1"].potential_at_hillock))

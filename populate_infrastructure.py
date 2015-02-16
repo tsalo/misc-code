@@ -22,7 +22,7 @@ def main(infrastructure_file):
     remove_string = "tree/master/"
     
     with open(infrastructure_file, "r") as fo:
-        infrastructure = [line.rstrip('\n') for line in fo]
+        infrastructure = [line.rstrip("\n") for line in fo]
     
     folder, _ = os.path.split(infrastructure_file)
     
@@ -30,7 +30,7 @@ def main(infrastructure_file):
         for file_ in files:
             if file_ == "README.md":
                 with open(root + "/" + file_, "r") as fo:
-                    readme_data = [line.rstrip('\n') for line in fo]
+                    readme_data = [line.rstrip("\n") for line in fo]
     
                 start_index = readme_data.index(start_line)
                 end_index = readme_data.index(end_line)
