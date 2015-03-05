@@ -22,5 +22,4 @@ end
 
 system(['gs -dBATCH -dNOPAUSE -sDEVICE=' device ' -sOutputFile=' filename_short '.' out_type ' -r100 ' filename])
 fprintf('Converted %s to %s.%s\n', filename, filenameShort, outType);
-
 end
