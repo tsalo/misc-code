@@ -11,13 +11,12 @@ function convertPs(filename, outType)
 
 if ~exist('outType', 'var')
     outType = 'pdf';
-    device = 'pdfwrite';
 end
 [~, filenameShort, ~] = fileparts(filename);
 
 if strcmp(outType, 'jpg')
     device = 'jpeg';
-elseif strcmp(out_type, 'pdf')
+elseif strcmp(outType, 'pdf')
     device = 'pdfwrite';
 end
 
