@@ -20,19 +20,19 @@ open are not E-Prime scripts (such as subtituting text files for an easy test),
 you need to alter the function execute_file to hold while your default text
 editor is open.
 
-Dependencies: Tkinter, csv, pickle, sys, psutil, os, subprocess, random, and
-inspect.
+Dependencies: Tkinter, pandas, numpy, pickle, sys, psutil, os, subprocess, and
+random.
 @author: tsalo
 """
 import Tkinter
-import csv
+import pandas as pd
+import numpy as np
 import pickle
 import sys
 import psutil
 import os
 import subprocess
 import random
-import inspect
 
 
 class ContinueWindow(Tkinter.Tk):
@@ -62,8 +62,6 @@ class ContinueWindow(Tkinter.Tk):
         quit_button = Tkinter.Button(self, text="Quit",
                                      command=self.close_window)
         quit_button.grid(row=3, column=5, columnspan=1)
-
-        self.mainloop()
 
     def continue_(self):
         """ Closes the GUI window."""
@@ -153,7 +151,7 @@ class MessageWindow(Tkinter.Tk):
 class OverwriteWindow(Tkinter.Tk):
     """
     Creates a window with query (Do you wish to overwrite) and two buttons, Yes
-    and No. Each sets response attribute to respective string.
+    and No. Each sets response attribute to corresponding boolean.
     """
     def __init__(self):
         Tkinter.Tk.__init__(self)
@@ -161,8 +159,7 @@ class OverwriteWindow(Tkinter.Tk):
         self.response = False
 
         overwrite_label = Tkinter.Label(self,
-                                        text="Duplicate ID and TP given. " +
-                                             "Overwrite?")
+                                        text="Duplicate ID and TP given. Overwrite?")
         overwrite_label.grid(row=1, column=1, columnspan=5)
 
         yes_button = Tkinter.Button(self, text="Yes", command=self.respond_yes)
@@ -170,8 +167,6 @@ class OverwriteWindow(Tkinter.Tk):
 
         no_button = Tkinter.Button(self, text="No", command=self.respond_no)
         no_button.grid(row=2, column=4, columnspan=1)
-
-        self.mainloop()
 
     def respond_yes(self):
         """ Closes the GUI window and sets response to Yes."""
@@ -187,7 +182,7 @@ class OverwriteWindow(Tkinter.Tk):
 class RetryWindow(Tkinter.Tk):
     """
     Creates a window with one inputted label and two buttons- Restart and Quit.
-    Each sets response attribute to respective string.
+    Each sets response attribute to corresponding boolean.
     """
     def __init__(self, label):
         Tkinter.Tk.__init__(self)
@@ -204,8 +199,6 @@ class RetryWindow(Tkinter.Tk):
         quit_button = Tkinter.Button(self, text="Quit", command=self.quit_)
         quit_button.grid(row=2, column=5, columnspan=1)
 
-        self.mainloop()
-
     def restart(self):
         """ Closes the GUI window and sets response to Restart."""
         self.response = True
@@ -218,6 +211,9 @@ class RetryWindow(Tkinter.Tk):
 
 
 class Subject():
+    """
+    Class to store subject information.
+    """
     def __init__(self, subject_id, timepoint, handedness, tp_dict, all_tasks):
         self.id = subject_id
         self.tp = timepoint
@@ -244,86 +240,78 @@ def execute_file(run_file):
                              safe_user(proc) for proc in data])
 
 
-def get_curr_order(task_order_csv, task_order, curr_subj,
-                   col_beg, col_end, overwrite):
+def get_curr_order(task_order_csv, task_order, curr_subj, overwrite):
     """
     Takes subject ID, timepoints, organization of task counterbalancing, and
     current list of task counterbalances (from csv) and returns correct order
     for given subject and timepoint, as well as updates list of lists (from
     csv).
     """
-    with open(task_order_csv, "r") as file_:
-        task_file = list(csv.reader(file_, delimiter=','))
-
-    subjects = [row[0] for row in task_file]
-
     if curr_subj.tp in curr_subj.tp_dict.keys():
         curr_order_list = task_order[curr_subj.tp_dict.get(curr_subj.tp)]
     else:
-        if RetryWindow(str(curr_subj.tp) +
-                       " is not an acceptable timepoint.").response:
-            run_script()
+        retry_ = RetryWindow("{0} is not an acceptable timepoint.".format(curr_subj.tp))
+        retry_.mainloop()
+        if retry_.response:
+            main()
             sys.exit()
         else:
             sys.exit()
-
-    # Find row corresponding to subject in csv. If subject is new, append an
-    # empty row to fill in.
-    try:
-        subj_pos = subjects.index(curr_subj.id)
-    except Exception:
-        subj_pos = len(subjects)
-        task_file.append([""] * len(task_file[0]))
-
-    # If correct position in spreadsheet is empty, fill in with correct list.
-    # Else, offer option to overwrite or quit.
-    curr_order = curr_order_list[(subj_pos-1) % len(curr_order_list)]
-    if not task_file[subj_pos][col_beg[curr_subj.tp_dict.get(curr_subj.tp)]]:
-        task_file[subj_pos][0] = curr_subj.id
-        task_file[subj_pos][col_beg[curr_subj.tp_dict.get(curr_subj.tp)]:
-                            col_end[curr_subj.tp_dict.get(
-                                    curr_subj.tp)]] = curr_order
+    
+    df = pd.read_csv(task_order_csv)
+    df2 = df.set_index("Subject")
+    
+    subject_position = np.where(df2.index==curr_subj.id)[0]
+    if not subject_position:
+        subject_position = len(df2.index)
+        df2.loc[curr_subj.id] = np.nan
+    curr_order = curr_order_list[subject_position % len(curr_order_list)]
+    
+    if np.isnan(df2.loc[curr_subj.id,
+                        "Task1_{0}".format(curr_subj.tp_dict.get(curr_subj.tp))]):
+        for i_task, task in enumerate(curr_order):
+            df2.loc[curr_subj.id,
+                    "Task{0}_{1}".format(i_task+1,
+                                         curr_subj.tp_dict.get(curr_subj.tp))] = task
         if curr_subj.all_tasks:
             message = MessageWindow("Order", "The current order is: " +
                                     ", ".join(curr_order))
             message.mainloop()
-        return curr_order, task_file, overwrite
+        return curr_order, df2, overwrite
     else:
-        if overwrite == 0:
-            if OverwriteWindow().response:
-                overwrite = 1
+        if not overwrite:
+            overwrite_ = OverwriteWindow()
+            overwrite_.mainloop()
+            if overwrite_.response:
+                overwrite = True
                 if curr_subj.all_tasks:
                     message = MessageWindow("Order", "The current order is: " +
                                             ", ".join(curr_order))
                     message.mainloop()
-                return curr_order, task_file, overwrite
+                return curr_order, df2, overwrite
             else:
                 sys.exit()
         else:
-            return curr_order, task_file, overwrite
+            return curr_order, df2, overwrite
 
 
-def run_script():
+def main(file_dir=None):
     """
     Runs full script (opens GUI windows, updates csvs, and opens E-Run files).
     """
-    code_dir = os.path.dirname(os.path.abspath(inspect.stack()[0][1]))
-    par_dir = os.path.dirname(code_dir)
-    task_order_csv = par_dir + "\\task_order.csv"
-    overwrite = 0
+    if not file_dir:
+        file_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), os.path.pardir))
+    overwrite = False
     input_window = MainWindow()
     input_window.mainloop()
 
-    with open(par_dir + "\\task_order.pickle") as file_:
-        [task_order, tp_dict, col_beg, col_end] = pickle.load(file_)
+    with open(os.path.join(file_dir, "task_order.pickle"), "r") as file_:
+        [task_order_csv, task_order, tp_dict] = pickle.load(file_)
 
-    with open(par_dir + "\\each_order.pickle") as file_:
+    with open(os.path.join(file_dir, "each_order.pickle"), "r") as file_:
         each_order = pickle.load(file_)
 
-    with open(par_dir + "\\task_info.pickle") as file_:
-        task_info = pickle.load(file_)
-
-    with open(par_dir + "\\file_dict.pickle") as file_:
+    with open(os.path.join(file_dir, "file_dict.pickle"), "r") as file_:
         file_dict = pickle.load(file_)
 
     curr_subj = Subject(input_window.sub_input.get(),
@@ -333,13 +321,8 @@ def run_script():
     curr_order, task_file, overwrite = get_curr_order(task_order_csv,
                                                       task_order,
                                                       curr_subj,
-                                                      col_beg,
-                                                      col_end,
                                                       overwrite)
-    with open(task_order_csv, "wb") as file_:
-        file_ = csv.writer(file_)
-        for row in task_file:
-            file_.writerow(row)
+    task_file.to_csv(task_order_csv)
 
     # Loop through tasks, reading csv/getting current task type for each and
     # adding to lists of lists ind_ord (task order or type), ind_file (read-in
@@ -351,21 +334,13 @@ def run_script():
     curr_subj.all_tasks = False
 
     for a, task in enumerate(curr_order):
-        task_order_csv = task_info.get(task).get("file")
-        task_order = each_order.get(task)
-        col_beg = task_info.get(task).get("col_beg")
-        col_end = task_info.get(task).get("col_end")
-        ind_ord[a], ind_file[a], overwrite = get_curr_order(task_order_csv,
-                                                            task_order,
+        task_version_csv = file_dict.get(task).get("csv_file")
+        task_version = each_order.get(task)
+        ind_ord[a], ind_file[a], overwrite = get_curr_order(task_version_csv,
+                                                            task_version,
                                                             curr_subj,
-                                                            col_beg,
-                                                            col_end,
                                                             overwrite)
-        with open(task_order_csv, "wb") as file_:
-            file_ = csv.writer(file_)
-            for row in ind_file[a]:
-                file_.writerow(row)
-
+        ind_file[a].to_csv(task_version_csv, na_rep="")
         run_file[a] = search_dict(file_dict, task, ind_ord[a][0])
 
     message = MessageWindow("Order", "The current order is: " +
@@ -374,34 +349,31 @@ def run_script():
 
     # Loop through tasks and execute files in order. Ask to continue after each
     # task finishes.
-    for iTask in range(len(run_file)):
+    for i_task in range(len(run_file)):
         response = "Restart"
         while response == "Restart":
-            if type(run_file[iTask]) == dict:
-                execute_file(run_file[iTask].get("Part1"))
-                execute_file(run_file[iTask].get("Part2"))
+            if type(run_file[i_task]) == dict:
+                execute_file(run_file[i_task].get("Part1"))
+                execute_file(run_file[i_task].get("Part2"))
             else:
-                execute_file(run_file[iTask])
+                execute_file(run_file[i_task])
 
             # When run_file is closed, move on to next file.
-            if iTask < (len(curr_order) - 1):
-                response = ContinueWindow(curr_order[iTask] + " " + 
-                                          str(ind_ord[iTask]) +
-                                          " is complete.\n" +
-                                          curr_order[iTask+1] + " " +
-                                          str(ind_ord[iTask+1]) + 
-                                          " is next.").response
-            else:
-                response = ContinueWindow(curr_order[iTask] + " " +
-                                          str(ind_ord[iTask]) +
-                                          " is complete.").response
+            window_string = "{0} {1} is complete.".format(curr_order[i_task],
+                                                          ind_ord[i_task])
+            if i_task < (len(curr_order) - 1):
+                window_string = "{0}\n{1} {2} is next.".format(window_string,
+                                                               curr_order[i_task+1],
+                                                               ind_ord[i_task+1])
+            continue_ = ContinueWindow(window_string)
+            continue_.mainloop()
+            response = continue_.response
 
             if response == "Quit":
                 sys.exit()
 
-    message = MessageWindow("Congrats!",
-                            "You're done. Your random number is " +
-                            str(random.randint(1, 63)))
+    message = MessageWindow("Congrats!", ("You're done. Your random number " +
+                                          "is {0}").format(random.randint(1, 63)))
     message.mainloop()
 
 
@@ -432,17 +404,17 @@ def search_dict(dictionary, *args):
     Given an arbitrary number of keys, looks through nested dictionaries for
     value. Last key can be a dummy.
     """
-    for iKey, Key in enumerate(args):
-        if Key in dictionary.keys():
-            if type(dictionary.get(Key)) is dict:
-                dictionary = dictionary.get(Key)
-                if iKey == len(args) - 1:
+    for i_key, key in enumerate(args):
+        if key in dictionary.keys():
+            if type(dictionary.get(key)) is dict:
+                dictionary = dictionary.get(key)
+                if i_key == len(args) - 1:
                     return dictionary
             else:
-                return dictionary.get(Key)
+                return dictionary.get(key)
         else:
             return dictionary
 
 
 if __name__ == "__main__":
-    run_script()
+    main()
