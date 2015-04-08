@@ -1,11 +1,15 @@
-function hourToc(tStart)
-% FORMAT hourToc(tStart)
+function timeElapsed = hourToc(tStart, printOut)
+% FORMAT timeElapsed = hourToc(tStart, printOut)
 % A great way to see how long your scripts are taking when you're testing
 % and streamlining them.
 %
 % tStart:   Result of tic (use tStart = tic to start timer).
 % output:   Will print a string of the time elapsed since tStart was
 %           created in hours, minutes, and seconds.
+
+if ~exist('printOut', 'var')
+    printOut = true;
+end
 
 tEnd = toc(tStart);
 
@@ -28,10 +32,13 @@ if secs == 1
 end
 
 if hrs > 0
-    fprintf('%d %s, %d %s, and %d %s\n', hrs, hrStr, mins, minStr, secs, secStr);
+    timeElapsed = sprintf('%d %s, %d %s, and %d %s', hrs, hrStr, mins, minStr, secs, secStr);
 elseif mins > 0
-    fprintf('%d %s and %d %s\n', mins, minStr, secs, secStr);
+    timeElapsed = sprintf('%d %s and %d %s', mins, minStr, secs, secStr);
 else
-    fprintf('%d %s\n', secs, secStr);
+    timeElapsed = sprintf('%d %s', secs, secStr);
+end
+if printOut
+    fprintf('%s\n', timeElapsed);
 end
 end
